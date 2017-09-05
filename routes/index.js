@@ -25,7 +25,6 @@ router.post('/api/customer/items/:itemId/purchases', function(req, res) {
     .then(function(item){
         // console.log(item);
         console.log("the cost of this item is: " + item.dataValues.cost );
-        console.log();
 
         if (item.dataValues.quantity <= 0 || item.dataValues.quantity === null){
             res.send("Sorry, we no longer have the item that you're looking for in the vending machine.")
@@ -67,21 +66,22 @@ router.post('/api/customer/items/:itemId/purchases', function(req, res) {
 
 // GET /api/vendor/purchases - get a list of all purchases with their item and date/time
 router.get('/api/vendor/purchases', function(req, res){
-     Purchase.findAll({
-        //  include: [
-         //
-        //  ]
-     })
-     .then(function(data){
-         res.send(data)
-     })
- })
-
+    Purchase.findAll({
+    })
+    .then(function(data){
+        console.log(data);
+        res.send(data)
+    })
+})
 
 // GET /api/vendor/money - get a total amount of money accepted by the machine
 
 router.get('/api/vendor/money', function(req, res){
-
+    Purchase.sum('moneyRequired')
+    .then(function(sum){
+        console.log(sum);
+        res.send("The vending machine contains " + sum + " cents total.")
+    })
 });
 
 // POST /api/vendor/items - add a new item not previously existing in the machine
@@ -101,6 +101,26 @@ router.post('/api/vendor/items', function(req, res){
 
 // PUT /api/vendor/items/:itemId - update item quantity, description, and cost
 
+router.put('/api/vendor/items/:itemId', function(req, res){
+    let theCurrentId = req.params.itemId;
 
+    Item.update({
+        description: req.body.description,
+        cost: req.body.cost,
+        quantity: req.body.quantity
+    },
+    {
+        where: {
+            id: theCurrentId,
+        }
+    }
+    )
+    .then(function(data){
+        console.log(data);
+        res.send(data)
+    })
+
+
+})
 
 module.exports = router;
