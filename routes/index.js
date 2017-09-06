@@ -4,7 +4,14 @@ const Item = require("../models/index").Item;
 const Purchase = require("../models/index").Purchase;
 
 
-
+function objectIt (a, b, c){
+    let obj = {
+        status: a,
+        message: b,
+        data: c
+    };
+    return obj
+}
 
 // GET /api/customer/items - get a list of items
 
@@ -12,7 +19,13 @@ router.get('/api/customer/items', function(req, res){
 
     Item.findAll({})
     .then(function(data){
-        res.send(data);
+
+        res.send(objectIt("success", "Here are all of the items in the machine", data));
+    })
+    .catch(function(err){
+        res.send(objectIt("fail", "Error", err))
+        // res.status(400).send(err)
+
     })
 });
 
@@ -27,9 +40,11 @@ router.post('/api/customer/items/:itemId/purchases', function(req, res) {
         console.log("the cost of this item is: " + item.dataValues.cost );
 
         if (item.dataValues.quantity <= 0 || item.dataValues.quantity === null){
-            res.send("Sorry, we no longer have the item that you're looking for in the vending machine.")
+            // res.status(400).send("Sorry, we no longer have the item that you're looking for in the vending machine.")
+            res.send(objectIt("fail", "Sorry, we no longer have the item that you're looking for in the vending machine.", item))
         } else if (req.body.moneyGiven < item.dataValues.cost) {
-            res.send("Sorry, you need " + (item.dataValues.cost - req.body.moneyGiven) + " more cents to purchase this item")
+            // res.send(objectIt("fail", '"Sorry, you need " + (item.dataValues.cost - req.body.moneyGiven) + " more cents to purchase this item"',  ))
+             res.status(402).send("Sorry, you need " + (item.dataValues.cost - req.body.moneyGiven) + " more cents to purchase this item", objectIt("fail", "see message above", item))
         }
 
         else if (req.body.moneyGiven >= item.dataValues.cost) {
@@ -47,12 +62,15 @@ router.post('/api/customer/items/:itemId/purchases', function(req, res) {
                     }
                 })
                 .then(function(data){
-                    res.send("You have successfully purchased your item. Your change is " + (req.body.moneyGiven - item.dataValues.cost) + " cents")
+                    // res.json(status:"success", data: data)
+
+                    res.send(objectIt("success", data))
+                    // res.status(201).send("You have successfully purchased your item. Your change is " + (req.body.moneyGiven - item.dataValues.cost) + " cents")
                 })
             })
         }
         else{
-            res.send("please be sure to input values for moneyGiven")
+            res.status(400).send("please be sure to input values for moneyGiven")
         }
         // console.log(item.dataValues.quantity);
     })
@@ -60,7 +78,8 @@ router.post('/api/customer/items/:itemId/purchases', function(req, res) {
     //
     // })
     .catch(function(err){
-        res.send("Sorry, we don't have the item that you're looking for in the vending machine")
+        // res.status(400).send("Sorry, we don't have the item that you're looking for in the vending machine")
+        res.send(objectIt("fail", "Sorry, we don't have the item that you're looking for in the vending machine", err))
     })
 });
 
@@ -70,7 +89,7 @@ router.get('/api/vendor/purchases', function(req, res){
     })
     .then(function(data){
         console.log(data);
-        res.send(data)
+        res.status(200).send(data)
     })
 })
 
@@ -80,7 +99,8 @@ router.get('/api/vendor/money', function(req, res){
     Purchase.sum('moneyRequired')
     .then(function(sum){
         console.log(sum);
-        res.send("The vending machine contains " + sum + " cents total.")
+        // res.status(200).send("The vending machine contains " + sum + " cents total.")
+        res.send(objectIt("success", sum))
     })
 });
 
@@ -94,7 +114,7 @@ router.post('/api/vendor/items', function(req, res){
         quantity: req.body.quantity
     })
     .then(function(data) {
-        res.send("you have added \"" + req.body.quantity + " " + req.body.description + "s\" to the vending machine!")
+        res.status(201).send("you have added \"" + req.body.quantity + " " + req.body.description + "s\" to the vending machine!")
     })
 
 });
@@ -117,7 +137,8 @@ router.put('/api/vendor/items/:itemId', function(req, res){
     )
     .then(function(data){
         console.log(data);
-        res.send(data)
+        res.status(201).json(data)
+
     })
 
 
